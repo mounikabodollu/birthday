@@ -21,6 +21,8 @@ The quiz accepts any selected option and emails the answers through EmailJS afte
 4. Allow your website's origin in EmailJS security settings. For local testing, also allow the exact localhost origin shown in the browser address bar (for example, `http://localhost:3000`).
 5. If delivery fails, inspect the EmailJS **Email History** for the failure reason.
 
+The official EmailJS Browser SDK is loaded when the quiz is submitted, with jsDelivr and unpkg CDN fallbacks. If loading or sending fails, **Retry sending answers** retries the request using the already selected answers; it does not restart the quiz. The submission is guarded against overlapping clicks.
+
 ## 🚀 Deploy
 - **GitHub Pages**: Push the contents of `birthday-surprise/` to a GitHub repository and enable **Settings → Pages → Deploy from branch (`main` / root)**.
 - **Vercel**: Import the repository (or drag & drop the `birthday-surprise/` folder in Vercel) with **Framework Preset: Other** and **Output Directory: `.`**.
