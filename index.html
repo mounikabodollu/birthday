@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Special Birthday Surprise 🎂💖</title>
+  <meta name="description" content="A personalized, interactive digital birthday gift filled with love, memories, and magical surprises." />
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%F0%9F%8E%82%3C/text%3E%3C/svg%3E"
+  />
+
+  <!-- Aesthetic Typography (Google Fonts with graceful local fallbacks) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Quicksand:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="state-locked">
+  <!-- Ambient Background Layers -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb orb-pink"></div>
+    <div class="ambient-orb orb-lavender"></div>
+    <div class="ambient-orb orb-gold"></div>
+  </div>
+  <canvas id="ambientCanvas" aria-hidden="true"></canvas>
+  <canvas id="celebrationCanvas" aria-hidden="true"></canvas>
+
+  <!-- Desktop Custom Cursor -->
+  <div id="customCursorDot" class="custom-cursor-dot" aria-hidden="true"></div>
+  <div id="customCursorRing" class="custom-cursor-ring" aria-hidden="true"></div>
+
+  <!-- Top Exploration Progress & Quick Nav (Visible once unlocked) -->
+  <header id="progressHeader" class="progress-header hidden" aria-label="Surprise navigation and progress">
+    <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="explorationProgressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <nav class="nav-pill-bar glass-panel" aria-label="Birthday surprise sections">
+      <div class="nav-brand">
+        <span class="nav-sparkle" aria-hidden="true">✨</span>
+        <span class="nav-title" id="navTitle">Birthday Surprise</span>
+      </div>
+      <div class="nav-links" id="navLinks">
+        <a href="#section-celebration" class="nav-link is-active" data-section="section-celebration">🎂 Wishes</a>
+        <a href="#section-timeline" class="nav-link" data-section="section-timeline">❤️ Memories</a>
+        <a href="#section-letter" class="nav-link" data-section="section-letter">💌 Letter</a>
+        <a href="#section-quiz" class="nav-link" data-section="section-quiz">🎮 Quiz</a>
+        <a href="#section-final" class="nav-link" data-section="section-final">🎁 Surprise</a>
+      </div>
+      <div class="nav-progress-badge" id="progressPercentText" aria-live="polite">0% Explored</div>
+    </nav>
+  </header>
+
+  <!-- Floating Background Music Player -->
+  <aside id="musicPlayer" class="music-player glass-panel" aria-label="Background music controls">
+    <audio id="bgMusic" loop preload="none">
+      <source src="assets/music/rangulu-ranguley.mp3" type="audio/mpeg" />
+    </audio>
+    <div class="music-player-info">
+      <div class="equalizer" id="musicEqualizer" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="music-meta">
+        <span class="music-label">Background music</span>
+        <span class="music-title" id="musicTitle">Ramayana: Rangulu Ranguley</span>
+        <span class="music-album" id="musicAlbum">Ramayana</span>
+        <span class="music-artists" id="musicArtists">Namit M, Nitesh T, A. R. Rahman, Raghav K, Vaishali S</span>
+      </div>
+      <div class="music-controls">
+        <button
+          type="button"
+          id="musicToggleBtn"
+          class="music-btn"
+          aria-label="Play background music"
+          title="Play / Pause Music"
+        >
+          <span id="musicPlayIcon" aria-hidden="true">▶</span>
+        </button>
+        <button
+          type="button"
+          id="muteToggleBtn"
+          class="music-btn"
+          aria-label="Mute background music"
+          title="Mute / Unmute"
+        >
+          <span id="musicMuteIcon" aria-hidden="true">🔊</span>
+        </button>
+      </div>
+    </div>
+    <span class="music-status" id="musicStatus" aria-live="polite">Checking audio file…</span>
+  </aside>
+
+  <!-- =========================================================
+       SECTION 1: WELCOME SCREEN
+       ========================================================= -->
+  <section id="section-welcome" class="stage-screen is-active" aria-labelledby="welcomeHeading">
+    <div class="stage-card glass-panel reveal-in">
+      <span class="eyebrow-pill">✨ A Little Magic Awaits ✨</span>
+
+      <!-- Animated Gift Box -->
+      <div class="welcome-gift-stage" id="welcomeGiftStage" aria-hidden="true">
+        <div class="gift-halo"></div>
+        <div class="orbit-sparkle s1">✦</div>
+        <div class="orbit-sparkle s2">✧</div>
+        <div class="orbit-sparkle s3">💖</div>
+        <div class="css-gift-box welcome-box" id="welcomeGiftBox">
+          <div class="gift-lid">
+            <div class="gift-bow">
+              <span class="bow-loop left"></span>
+              <span class="bow-loop right"></span>
+              <span class="bow-knot"></span>
+            </div>
+            <div class="ribbon-h"></div>
+          </div>
+          <div class="gift-body">
+            <div class="ribbon-v"></div>
+          </div>
+        </div>
+      </div>
+
+      <h1 id="welcomeHeading" class="welcome-title">
+        Hey You! Someone has planned a special surprise for you...
+      </h1>
+      <p class="welcome-subtext" id="welcomeSubtext">
+        Take a deep breath, turn up your sound, and step into a world made just for you.
+      </p>
+
+      <button type="button" id="openSurpriseBtn" class="btn-primary btn-glow">
+        <span>Open Your Surprise ❤️</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 2: SECRET PASSWORD
+       ========================================================= -->
+  <section id="section-password" class="stage-screen hidden" aria-labelledby="passwordHeading">
+    <div class="stage-card glass-panel password-card" id="passwordCard">
+      <button type="button" id="backToWelcomeBtn" class="back-chip" aria-label="Back to welcome screen">
+        ← Back
+      </button>
+
+      <div class="lock-emblem" id="lockEmblem" aria-hidden="true">
+        <span class="lock-icon" id="lockIcon">🔐</span>
+      </div>
+
+      <span class="eyebrow-pill">💖 Secret Keepsake Gate 💖</span>
+      <h2 id="passwordHeading" class="section-heading-sm">
+        Before entering, answer this little secret!
+      </h2>
+      <p class="password-prompt" id="passwordPrompt">
+        What special word describes how long I want to celebrate you?
+      </p>
+
+      <form id="passwordForm" class="password-form" novalidate>
+        <div class="input-group">
+          <input
+            type="password"
+            id="passwordInput"
+            class="glass-input"
+            placeholder="Type the secret word..."
+            autocomplete="off"
+            aria-label="Enter secret password"
+            required
+          />
+          <button
+            type="button"
+            id="togglePwdVisibility"
+            class="pwd-eye-btn"
+            aria-label="Show password"
+            title="Show / Hide Password"
+          >
+            👁️
+          </button>
+        </div>
+
+        <p id="passwordError" class="password-error" role="alert" aria-live="polite"></p>
+
+        <button type="submit" id="unlockBtn" class="btn-primary btn-glow">
+          <span>Unlock My Surprise ✨</span>
+        </button>
+      </form>
+
+      <div class="hint-area">
+        <button type="button" id="hintToggleBtn" class="hint-toggle-btn">
+          Need a little hint? 💭
+        </button>
+        <p id="passwordHintText" class="password-hint hidden"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       UNLOCKED CELEBRATION EXPERIENCE (SECTIONS 3 - 8)
+       ========================================================= -->
+  <main id="mainJourney" class="main-journey hidden">
+
+    <!-- SECTION 3: BIRTHDAY CELEBRATION -->
+    <section id="section-celebration" class="journey-section celebration-section" aria-labelledby="celebrationHeading">
+      <div class="balloon-layer" id="balloonLayer" aria-hidden="true"></div>
+
+      <div class="container celebration-content">
+        <span class="eyebrow-pill reveal-on-scroll">🎉 Happy Birthday Celebration 🎉</span>
+
+        <h1 id="celebrationHeading" class="hero-birthday-title reveal-on-scroll">
+          Happy Birthday <span id="birthdayPersonName" class="gradient-name">My Love</span>
+        </h1>
+
+        <p class="hero-subtitle reveal-on-scroll" id="heroSubtitle">
+          May today wrap you in magic, laughter, golden memories, and all the love your heart can hold.
+        </p>
+
+        <!-- Live Birthday Countdown (shown if birthday date is in the future) -->
+        <div id="countdownWidget" class="countdown-card glass-panel reveal-on-scroll">
+          <p class="countdown-label" id="countdownLabel">✨ Counting Down to Your Midnight Magic ✨</p>
+          <div class="countdown-grid" id="countdownGrid">
+            <div class="time-tile">
+              <span class="time-value" id="cdDays">00</span>
+              <span class="time-unit">Days</span>
+            </div>
+            <div class="time-tile">
+              <span class="time-value" id="cdHours">00</span>
+              <span class="time-unit">Hours</span>
+            </div>
+            <div class="time-tile">
+              <span class="time-value" id="cdMinutes">00</span>
+              <span class="time-unit">Minutes</span>
+            </div>
+            <div class="time-tile">
+              <span class="time-value" id="cdSeconds">00</span>
+              <span class="time-unit">Seconds</span>
+            </div>
+          </div>
+          <div class="today-celebration-banner hidden" id="todayCelebrationBanner">
+            🎂✨ Today Is Your Special Day! Make Every Wish Count! ✨🎂
+          </div>
+        </div>
+
+        <!-- Interactive Animated Birthday Cake -->
+        <div class="cake-stage glass-panel reveal-on-scroll" id="cakeStage">
+          <div class="cake-wrapper" id="cakeWrapper" role="img" aria-label="Animated birthday cake with five glowing candles">
+            <!-- Candles -->
+            <div class="candles-row" id="candlesRow">
+              <div class="candle"><span class="flame"></span><span class="smoke"></span></div>
+              <div class="candle"><span class="flame"></span><span class="smoke"></span></div>
+              <div class="candle"><span class="flame"></span><span class="smoke"></span></div>
+              <div class="candle"><span class="flame"></span><span class="smoke"></span></div>
+              <div class="candle"><span class="flame"></span><span class="smoke"></span></div>
+            </div>
+
+            <!-- Top Tier -->
+            <div class="cake-tier tier-top">
+              <div class="frosting-drips">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="cake-pearls"></div>
+            </div>
+
+            <!-- Bottom Tier -->
+            <div class="cake-tier tier-bottom">
+              <div class="frosting-drips wide">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="cake-ribbon"></div>
+            </div>
+
+            <!-- Cake Plate -->
+            <div class="cake-plate"></div>
+            <div class="cake-stand"></div>
+          </div>
+
+          <div class="cake-actions">
+            <button type="button" id="blowCandlesBtn" class="btn-primary btn-glow">
+              <span>Blow Out the Candles 🕯️✨</span>
+            </button>
+          </div>
+
+          <div id="birthdayWishReveal" class="wish-reveal hidden" aria-live="polite">
+            <div class="wish-sparkle-icon" aria-hidden="true">🌟💖🌟</div>
+            <h3 class="wish-title">Your Wish Has Been Sent to the Stars!</h3>
+            <p class="wish-message" id="candleWishText"></p>
+          </div>
+        </div>
+
+        <a href="#section-timeline" class="scroll-cue">
+          <span>Scroll for Gallery</span>
+          <span class="scroll-arrow" aria-hidden="true">↓</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- SECTION 4: OUR BEAUTIFUL MEMORIES TIMELINE -->
+    <section id="section-timeline" class="journey-section" aria-labelledby="timelineHeading">
+      <div class="container">
+        <div class="section-header reveal-on-scroll">
+          <span class="eyebrow-pill">❤️Your Gallery</span>
+          <h2 id="timelineHeading" class="section-title">Your Beautiful Memories</h2>
+          <p class="section-desc">
+          "A collection of little moments, endless smiles, and memories that will stay in our hearts forever. ✨"
+          </p>
+        </div>
+
+        <div id="timelineContainer" class="timeline">
+          <div class="timeline-spine" aria-hidden="true"></div>
+          <!-- Populated dynamically from SURPRISE_CONFIG.timeline -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: A SPECIAL BIRTHDAY LETTER -->
+    <section id="section-letter" class="journey-section" aria-labelledby="letterHeading">
+      <div class="container letter-container">
+        <div class="section-header reveal-on-scroll">
+          <span class="eyebrow-pill">💌 Just For You</span>
+          <h2 id="letterHeading" class="section-title">A Special Birthday Letter</h2>
+          <p class="section-desc">
+            Words from the deepest, softest corner of my heart — tap the wax seal to open.
+          </p>
+        </div>
+
+        <div class="envelope-stage reveal-on-scroll">
+          <div
+            class="envelope-wrapper"
+            id="envelopeWrapper"
+            role="button"
+            tabindex="0"
+            aria-expanded="false"
+            aria-label="Open birthday love letter envelope"
+          >
+            <div class="envelope-back"></div>
+
+            <!-- Rising Letter Card -->
+            <article class="letter-paper" id="letterPaper" aria-live="polite">
+              <div class="letter-inner">
+                <div class="letter-floral-top" aria-hidden="true">✿ ❦ ✿</div>
+                <p class="letter-salutation" id="letterSalutation"></p>
+                <div class="letter-body" id="letterBody"></div>
+                <div class="letter-footer hidden" id="letterFooter">
+                  <div class="glowing-heart-wrap" aria-hidden="true">
+                    <span class="glowing-heart">❤️</span>
+                  </div>
+                  <p class="letter-closing" id="letterClosing"></p>
+                  <p class="letter-signature" id="letterSignature"></p>
+                </div>
+              </div>
+            </article>
+
+            <div class="envelope-front-left"></div>
+            <div class="envelope-front-right"></div>
+            <div class="envelope-front-bottom"></div>
+            <div class="envelope-flap"></div>
+
+            <div class="wax-seal" id="waxSeal" aria-hidden="true">
+              <span>❤️</span>
+            </div>
+          </div>
+
+          <div class="letter-controls">
+            <p class="envelope-hint" id="envelopeHint">✨ Tap the envelope to unseal your letter ✨</p>
+            <button type="button" id="skipTypewriterBtn" class="btn-secondary hidden">
+              Show Full Letter Instantly ✨
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: INTERACTIVE BIRTHDAY QUIZ -->
+    <section id="section-quiz" class="journey-section" aria-labelledby="quizHeading">
+      <div class="container">
+        <div class="section-header reveal-on-scroll">
+          <span class="eyebrow-pill">🎮 Play With Me</span>
+          <h2 id="quizHeading" class="section-title">A Few Questions for You</h2>
+          <p class="section-desc">
+            Choose the answers that feel right and share a little more about what you love.
+          </p>
+        </div>
+
+        <div class="quiz-card glass-panel reveal-on-scroll" id="quizCard">
+          <!-- Active Question View -->
+          <div id="quizPlayView">
+            <div class="quiz-top-bar">
+              <span class="quiz-counter" id="quizCounter">Question 1 of 5</span>
+            </div>
+            <div class="quiz-progress-dots" id="quizDots" aria-hidden="true"></div>
+
+            <h3 class="quiz-question" id="quizQuestionText"></h3>
+            <div class="quiz-options" id="quizOptions"></div>
+
+            <div class="quiz-feedback hidden" id="quizFeedback" aria-live="polite">
+              <span class="feedback-emoji" id="feedbackEmoji" aria-hidden="true"></span>
+              <p class="feedback-text" id="feedbackText"></p>
+            </div>
+
+            <div class="quiz-footer-actions">
+              <button type="button" id="quizNextBtn" class="btn-primary hidden">
+                <span>Next Question →</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quiz Completion View -->
+          <div id="quizResultView" class="quiz-result hidden" aria-live="polite">
+            <div class="result-badge" id="resultBadge" aria-hidden="true">💖</div>
+            <h3 class="result-title" id="resultTitle"></h3>
+            <p class="result-message" id="resultMessage"></p>
+            <p class="quiz-email-status" id="quizEmailStatus" role="status"></p>
+            <button type="button" id="quizEmailRetryBtn" class="btn-secondary quiz-email-retry hidden">
+              <span>Retry sending answers</span>
+            </button>
+            <button type="button" id="quizRetryBtn" class="btn-secondary">
+              <span>Play Quiz Again 🔄</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: A LITTLE BOX OF FEELINGS -->
+    <section id="section-final" class="journey-section final-section" aria-labelledby="finalHeading">
+      <div class="container">
+        <div class="final-stage glass-panel reveal-on-scroll" id="finalStage">
+          <span class="eyebrow-pill">A keepsake, just for you 💌</span>
+          <h2 id="finalHeading" class="section-title">A Little Box of Feelings 💌</h2>
+          <p class="section-desc">A tiny surprise, filled with little reasons to smile.</p>
+
+          <button
+            type="button"
+            id="unlockFinalSurpriseBtn"
+            class="unlock-final-button"
+            aria-controls="feelingsContent"
+            aria-expanded="false"
+          >
+            <span class="unlock-final-icon" aria-hidden="true">💌</span>
+            <span class="unlock-final-label">Tap to unlock the last surprise</span>
+            <span class="unlock-final-hint">A little something, just for you ✨</span>
+          </button>
+
+          <div id="feelingsContent" class="feelings-content hidden" aria-hidden="true">
+          <figure class="memory-box-figure">
+            <img
+              class="memory-box-image"
+              src="assets/images/birthday-surprise-couple.png"
+              alt="An illustration of a couple sharing a moment among pink flowers, with ornate palace architecture behind them"
+              width="736"
+              height="1307"
+            />
+            <figcaption class="memory-box-caption">A little moment, tucked away just for you.</figcaption>
+          </figure>
+
+          <p class="feelings-instruction">Choose a little letter to open ✨</p>
+          <div class="feelings-grid" id="feelingsGrid">
+            <article class="feeling-card">
+              <button type="button" class="feeling-trigger" id="feelingPromiseButton" aria-expanded="false" aria-controls="feelingPromiseMessage">
+                <span class="feeling-icon" aria-hidden="true">💌</span>
+                <span class="feeling-title">A little promise</span>
+                <span class="feeling-open-hint">Open your letter <span aria-hidden="true">↗</span></span>
+              </button>
+              <div class="feeling-letter" id="feelingPromiseMessage" aria-hidden="true">
+                <p>I promise to bring little smiles to your ordinary days, tease you sometimes, and always make room for laughter.</p>
+              </div>
+            </article>
+            <article class="feeling-card">
+              <button type="button" class="feeling-trigger" id="feelingSmileButton" aria-expanded="false" aria-controls="feelingSmileMessage">
+                <span class="feeling-icon" aria-hidden="true">🥰</span>
+                <span class="feeling-title">A little smile</span>
+                <span class="feeling-open-hint">Open your letter <span aria-hidden="true">↗</span></span>
+              </button>
+              <div class="feeling-letter" id="feelingSmileMessage" aria-hidden="true">
+                <p>Your smile is one of those little things that can make an ordinary day feel special. So keep smiling, Bava! ❤️</p>
+              </div>
+            </article>
+            <article class="feeling-card">
+              <button type="button" class="feeling-trigger" id="feelingWishButton" aria-expanded="false" aria-controls="feelingWishMessage">
+                <span class="feeling-icon" aria-hidden="true">🌷</span>
+                <span class="feeling-title">A little wish</span>
+                <span class="feeling-open-hint">Open your letter <span aria-hidden="true">↗</span></span>
+              </button>
+              <div class="feeling-letter" id="feelingWishMessage" aria-hidden="true">
+                <p>May all your dreams come true, may happiness follow you everywhere, and may you always have reasons to smile.</p>
+              </div>
+            </article>
+            <article class="feeling-card">
+              <button type="button" class="feeling-trigger" id="feelingSurpriseButton" aria-expanded="false" aria-controls="feelingSurpriseMessage">
+                <span class="feeling-icon" aria-hidden="true">✨</span>
+                <span class="feeling-title">A little surprise</span>
+                <span class="feeling-open-hint">Open your letter <span aria-hidden="true">↗</span></span>
+              </button>
+              <div class="feeling-letter" id="feelingSurpriseMessage" aria-hidden="true">
+                <p>Here's a little reminder that someone is secretly happy to have you in her life. Don't forget that! 🥰</p>
+              </div>
+            </article>
+          </div>
+
+          <div id="finalRevealCard" class="feelings-ending hidden" aria-live="polite">
+            <div class="ending-hearts" aria-hidden="true">
+              <span>♡</span><span>♥</span><span>♡</span><span>♥</span><span>♡</span>
+            </div>
+            <h3 class="ending-title">One birthday, countless little reasons to smile. ❤️</h3>
+            <p class="ending-signature"><span>With lots of love,</span>Your Mardhal 💗</p>
+            <div class="final-actions">
+              <button type="button" id="replayNotesBtn" class="btn-primary btn-glow">
+                <span>Open the little notes again 💌</span>
+              </button>
+              <button type="button" id="replaySurpriseBtn" class="btn-secondary">
+                <span>Replay the whole birthday journey 🔄</span>
+              </button>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FULL-SCREEN MEMORY LIGHTBOX -->
+  <div
+    id="lightbox"
+    class="lightbox hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lightboxTitle"
+  >
+    <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+    <div class="lightbox-panel glass-panel">
+      <div class="lightbox-top">
+        <span class="lightbox-counter" id="lightboxCounter">1 / 6</span>
+        <div class="lightbox-controls">
+          <button type="button" id="lightboxCloseBtn" class="lb-icon-btn" aria-label="Close lightbox">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div class="lightbox-media-wrap">
+        <button type="button" id="lightboxPrevBtn" class="lb-nav-btn prev" aria-label="Previous photo">
+          ‹
+        </button>
+        <img id="lightboxImage" src="" alt="" class="lightbox-img" />
+        <button type="button" id="lightboxNextBtn" class="lb-nav-btn next" aria-label="Next photo">
+          ›
+        </button>
+      </div>
+
+      <div class="lightbox-caption-box">
+        <span class="lightbox-date" id="lightboxDate"></span>
+        <h3 class="lightbox-title" id="lightboxTitle"></h3>
+        <p class="lightbox-caption" id="lightboxCaption"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

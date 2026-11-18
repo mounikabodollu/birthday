@@ -1,0 +1,36 @@
+/*
+ * Local Custom Fonts Configuration
+ * --------------------------------
+ * Drop your custom .woff2 font files into this folder (assets/fonts/)
+ * and uncomment the @font-face blocks below if you want 100% offline custom fonts
+ * without relying on Google Fonts CDN.
+ *
+ * By default, index.html loads Playfair Display, Dancing Script, and Quicksand
+ * from Google Fonts with graceful local serif/cursive/sans-serif fallbacks.
+ */
+
+/*
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('./PlayfairDisplay-VariableFont_wght.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  src: url('./DancingScript-VariableFont_wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  src: url('./Quicksand-VariableFont_wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+*/
