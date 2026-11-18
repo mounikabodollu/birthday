@@ -170,12 +170,14 @@ function createEmailJsSdkLoadError(code, message, url) {
 }
 
 function getEmailJsBrowserSdk() {
-  const emailjs = window.emailjs;
-  return emailjs &&
-    typeof emailjs.init === "function" &&
-    typeof emailjs.send === "function"
-    ? emailjs
-    : null;
+  const windowSdk = typeof window !== "undefined" ? window.emailjs : null;
+  const globalSdk = typeof emailjs !== "undefined" ? emailjs : null;
+  const candidates = [windowSdk, globalSdk];
+  return candidates.find(sdk =>
+    sdk &&
+    typeof sdk.init === "function" &&
+    typeof sdk.send === "function"
+  ) || null;
 }
 
 function loadEmailJsSdkFrom(url) {
@@ -201,7 +203,6 @@ function loadEmailJsSdkFrom(url) {
         "Timed out while loading the EmailJS Browser SDK.",
         url
       );
-      console.error("[EmailJS] CDN loading timed out:", url, error);
       fail(error);
     }, EMAILJS_SDK_LOAD_TIMEOUT);
 
@@ -217,10 +218,9 @@ function loadEmailJsSdkFrom(url) {
       } else {
         const error = createEmailJsSdkLoadError(
           "SDK_API_MISSING",
-          "The EmailJS SDK loaded but window.emailjs.init and window.emailjs.send are unavailable.",
+          "The EmailJS SDK response did not expose valid init and send functions.",
           url
         );
-        console.error("[EmailJS] SDK loaded without the expected browser API:", url, error);
         fail(error);
       }
     };
@@ -230,7 +230,6 @@ function loadEmailJsSdkFrom(url) {
         "The EmailJS SDK could not be downloaded.",
         url
       );
-      console.error("[EmailJS] CDN request failed:", url, error);
       fail(error);
     };
     document.head.appendChild(sdkScript);
@@ -251,9 +250,18 @@ async function ensureEmailJsSdk() {
         return await loadEmailJsSdkFrom(url);
       } catch (error) {
         lastError = error;
+        console.error("[EmailJS] SDK CDN attempt failed:", {
+          url,
+          code: error && error.code,
+          reason: error && error.message,
+          error
+        });
       }
     }
-    console.error("[EmailJS] All configured SDK CDNs failed:", lastError);
+    console.error("[EmailJS] All configured SDK CDNs failed:", {
+      urls: EMAILJS_SDK_URLS,
+      lastError
+    });
     throw lastError || new Error("The EmailJS Browser SDK could not be loaded.");
   })().finally(() => {
     emailJsLoadPromise = null;
@@ -277,7 +285,6 @@ const state = {
   quizAnswers: [],
   quizEmailSending: false,
   quizEmailSent: false,
-  quizEmailInitialized: false,
   openedFeelings: new Set(),
   lightboxIndex: 0,
   musicUserPaused: false,
@@ -1341,12 +1348,6 @@ async function sendQuizAnswers() {
   try {
     const emailjs = await ensureEmailJsSdk();
 
-    phase = "initializing";
-    if (!state.quizEmailInitialized) {
-      emailjs.init({ publicKey });
-      state.quizEmailInitialized = true;
-    }
-
     phase = "sending";
     setQuizEmailStatus(`Sending your answers to ${recipient}...`);
     await emailjs.send(
@@ -1360,7 +1361,8 @@ async function sendQuizAnswers() {
         email: recipient,
         quiz_answers: answers,
         submitted_at: submittedAt
-      }
+      },
+      { publicKey }
     );
     state.quizEmailSent = true;
     setQuizEmailStatus(`Your answers were emailed to ${recipient}.`);
@@ -1371,20 +1373,14 @@ async function sendQuizAnswers() {
       const hasMissingApi = error && error.code === "SDK_API_MISSING";
       console.error(
         hasMissingApi
-          ? "[EmailJS] SDK loaded, but its browser API is unavailable."
+          ? "[EmailJS] SDK response did not expose the expected browser API."
           : "[EmailJS] SDK could not be loaded from the configured CDNs.",
         error
       );
       setQuizEmailStatus(hasMissingApi
-        ? `EmailJS loaded without the expected browser API (window.emailjs.init/send). Check the CDN response or content blocker, then retry. ${details || ""}`.trim()
+        ? `EmailJS loaded without valid init/send functions. Check the CDN response or content blocker, then retry. ${details || ""}`.trim()
         : `EmailJS SDK could not be downloaded from the configured CDNs. Check your connection or content blocker, then retry. ${details || ""}`.trim(),
       true);
-    } else if (phase === "initializing") {
-      console.error("[EmailJS] SDK initialization failed:", error);
-      setQuizEmailStatus(
-        `EmailJS could not initialize. Verify the Public Key in script.js. ${details || ""}`.trim(),
-        true
-      );
     } else if (statusCode) {
       console.error("[EmailJS] Email request failed:", {
         status: statusCode,
