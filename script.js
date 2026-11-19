@@ -155,121 +155,6 @@ const SURPRISE_CONFIG = {
 
 };
 
-const EMAILJS_SDK_URLS = [
-  "https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js",
-  "https://unpkg.com/@emailjs/browser@5/dist/email.min.js"
-];
-const EMAILJS_SDK_LOAD_TIMEOUT = 15000;
-let emailJsLoadPromise = null;
-
-function createEmailJsSdkLoadError(code, message, url) {
-  const error = new Error(message);
-  error.code = code;
-  error.url = url;
-  return error;
-}
-
-function getEmailJsBrowserSdk() {
-  const windowSdk = typeof window !== "undefined" ? window.emailjs : null;
-  const globalSdk = typeof emailjs !== "undefined" ? emailjs : null;
-  const candidates = [windowSdk, globalSdk];
-  return candidates.find(sdk =>
-    sdk &&
-    typeof sdk.init === "function" &&
-    typeof sdk.send === "function"
-  ) || null;
-}
-
-function loadEmailJsSdkFrom(url) {
-  return new Promise((resolve, reject) => {
-    const sdkScript = document.createElement("script");
-    let settled = false;
-    let timeoutId;
-    const cleanup = () => {
-      window.clearTimeout(timeoutId);
-      sdkScript.onload = null;
-      sdkScript.onerror = null;
-    };
-    const fail = (error) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      sdkScript.remove();
-      reject(error);
-    };
-    timeoutId = window.setTimeout(() => {
-      const error = createEmailJsSdkLoadError(
-        "CDN_TIMEOUT",
-        "Timed out while loading the EmailJS Browser SDK.",
-        url
-      );
-      fail(error);
-    }, EMAILJS_SDK_LOAD_TIMEOUT);
-
-    sdkScript.src = url;
-    sdkScript.async = true;
-    sdkScript.onload = () => {
-      if (settled) return;
-      const emailjs = getEmailJsBrowserSdk();
-      if (emailjs) {
-        settled = true;
-        cleanup();
-        resolve(emailjs);
-      } else {
-        const error = createEmailJsSdkLoadError(
-          "SDK_API_MISSING",
-          "The EmailJS SDK response did not expose valid init and send functions.",
-          url
-        );
-        fail(error);
-      }
-    };
-    sdkScript.onerror = () => {
-      const error = createEmailJsSdkLoadError(
-        "CDN_LOAD_FAILED",
-        "The EmailJS SDK could not be downloaded.",
-        url
-      );
-      fail(error);
-    };
-    document.head.appendChild(sdkScript);
-  });
-}
-
-async function ensureEmailJsSdk() {
-  const loadedEmailjs = getEmailJsBrowserSdk();
-  if (loadedEmailjs) return loadedEmailjs;
-  if (emailJsLoadPromise) return emailJsLoadPromise;
-
-  emailJsLoadPromise = (async () => {
-    let lastError;
-    for (const url of EMAILJS_SDK_URLS) {
-      const emailjs = getEmailJsBrowserSdk();
-      if (emailjs) return emailjs;
-      try {
-        return await loadEmailJsSdkFrom(url);
-      } catch (error) {
-        lastError = error;
-        console.error("[EmailJS] SDK CDN attempt failed:", {
-          url,
-          code: error && error.code,
-          reason: error && error.message,
-          error
-        });
-      }
-    }
-    console.error("[EmailJS] All configured SDK CDNs failed:", {
-      urls: EMAILJS_SDK_URLS,
-      lastError
-    });
-    throw lastError || new Error("The EmailJS Browser SDK could not be loaded.");
-  })().finally(() => {
-    emailJsLoadPromise = null;
-  });
-
-  return emailJsLoadPromise;
-}
-
 /* ==========================================================================
    DOM REFERENCES & GLOBAL STATE
    ========================================================================== */
@@ -1312,12 +1197,10 @@ async function sendQuizAnswers() {
   if (state.quizEmailSending || state.quizEmailSent) return;
 
   const { serviceId, templateId, publicKey, recipient } = SURPRISE_CONFIG.quizEmail;
-  if (![serviceId, templateId, publicKey].every(value => typeof value === "string" && value.trim())) {
-    setQuizEmailStatus(
-      "Email setup is incomplete. Check the EmailJS Service ID, Template ID, and Public Key in script.js.",
-      true
-    );
-    els.quizEmailRetryBtn.classList.add("hidden");
+  if (![serviceId, templateId, publicKey, recipient].every(value =>
+    typeof value === "string" && value.trim()
+  )) {
+    console.error("[Quiz email] EmailJS configuration is incomplete.");
     return;
   }
 
@@ -1325,11 +1208,7 @@ async function sendQuizAnswers() {
     typeof state.quizAnswers[index] !== "string" || !state.quizAnswers[index].trim()
   );
   if (missingAnswerIndex !== -1) {
-    setQuizEmailStatus(
-      `Question ${missingAnswerIndex + 1} has no answer. Please replay the quiz before sending.`,
-      true
-    );
-    els.quizEmailRetryBtn.classList.add("hidden");
+    console.error(`[Quiz email] Missing answer for question ${missingAnswerIndex + 1}.`);
     return;
   }
 
@@ -1337,78 +1216,53 @@ async function sendQuizAnswers() {
   els.quizEmailRetryBtn.disabled = true;
   els.quizEmailRetryBtn.classList.add("hidden");
   els.quizRetryBtn.disabled = true;
-  setQuizEmailStatus("Loading EmailJS...");
+  // Keep email delivery completely silent in the visitor interface.
+  els.quizEmailStatus.textContent = "";
+  els.quizEmailStatus.classList.remove("is-error");
 
   const answers = SURPRISE_CONFIG.quiz
     .map((question, index) => `${index + 1}. ${question.question}\nAnswer: ${state.quizAnswers[index]}`)
     .join("\n\n");
   const submittedAt = new Date().toLocaleString();
-  let phase = "loading";
 
   try {
-    const emailjs = await ensureEmailJsSdk();
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        template_params: {
+          title: "Birthday Quiz Answers",
+          name: SURPRISE_CONFIG.recipientName,
+          time: submittedAt,
+          message: answers,
+          email: recipient,
+          to_email: recipient,
+          quiz_answers: answers,
+          submitted_at: submittedAt
+        }
+      })
+    });
 
-    phase = "sending";
-    setQuizEmailStatus(`Sending your answers to ${recipient}...`);
-    await emailjs.send(
-      serviceId,
-      templateId,
-      {
-        title: "Birthday Quiz Answers",
-        name: SURPRISE_CONFIG.recipientName,
-        time: submittedAt,
-        message: answers,
-        email: recipient,
-        quiz_answers: answers,
-        submitted_at: submittedAt
-      },
-      { publicKey }
-    );
-    state.quizEmailSent = true;
-    setQuizEmailStatus(`Your answers were emailed to ${recipient}.`);
-  } catch (error) {
-    const details = error && (error.text || error.message || (typeof error === "string" ? error : ""));
-    const statusCode = error && Number(error.status);
-    if (phase === "loading") {
-      const hasMissingApi = error && error.code === "SDK_API_MISSING";
-      console.error(
-        hasMissingApi
-          ? "[EmailJS] SDK response did not expose the expected browser API."
-          : "[EmailJS] SDK could not be loaded from the configured CDNs.",
-        error
-      );
-      setQuizEmailStatus(hasMissingApi
-        ? `EmailJS loaded without valid init/send functions. Check the CDN response or content blocker, then retry. ${details || ""}`.trim()
-        : `EmailJS SDK could not be downloaded from the configured CDNs. Check your connection or content blocker, then retry. ${details || ""}`.trim(),
-      true);
-    } else if (statusCode) {
-      console.error("[EmailJS] Email request failed:", {
-        status: statusCode,
-        response: error && error.text,
-        error
-      });
-      let guidance = "Verify the service ID, template ID, public key, and allowed website origin in EmailJS.";
-      if (statusCode === 401 || statusCode === 403) {
-        guidance = "Verify the Public Key and that this website's origin is allowed in EmailJS.";
-      } else if (statusCode === 404) {
-        guidance = "Verify the EmailJS Service ID and Template ID in script.js.";
-      }
-      setQuizEmailStatus(
-        `Email sending failed (status ${statusCode}). ${details || guidance} ${details ? guidance : ""}`.trim(),
-        true
-      );
-    } else {
-      console.error("[EmailJS] Email request failed before receiving a successful response:", error);
-      setQuizEmailStatus(
-        `Email sending failed, likely because of a network connection problem. Check your connection and EmailJS configuration, then retry. ${details || ""}`.trim(),
-        true
-      );
+    if (!response.ok) {
+      const responseText = await response.text().catch(() => "");
+      throw new Error(`EmailJS HTTP ${response.status}: ${responseText}`);
     }
-    els.quizEmailRetryBtn.classList.remove("hidden");
+
+    state.quizEmailSent = true;
+    console.info("[Quiz email] EmailJS accepted the quiz submission.");
+  } catch (error) {
+    // Do not show technical errors or failure messages to the quiz taker.
+    console.error("[Quiz email] Automatic delivery failed:", error);
   } finally {
     state.quizEmailSending = false;
     els.quizEmailRetryBtn.disabled = false;
+    els.quizEmailRetryBtn.classList.add("hidden");
     els.quizRetryBtn.disabled = false;
+    els.quizEmailStatus.textContent = "";
+    els.quizEmailStatus.classList.remove("is-error");
   }
 }
 
@@ -1437,7 +1291,6 @@ function initQuiz() {
     }
   });
 
-  els.quizEmailRetryBtn.addEventListener("click", sendQuizAnswers);
 
   els.quizRetryBtn.addEventListener("click", () => {
     state.currentQuizIndex = 0;
